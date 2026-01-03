@@ -1,0 +1,56 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+}
+
+.app-header {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 30px 20px;
+  text-align: center;
+  border-bottom: 2px solid #00ff88;
+  backdrop-filter: blur(10px);
+}
+
+.app-header h1 {
+  font-size: 36px;
+  margin-bottom: 10px;
+  color: #00ff88;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.app-header p {
+  color: #aaa;
+  font-size: 16px;
+}
+
+main {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 24px;
+  }
+
+  .app-header p {
+    font-size: 14px;
+  }
+}

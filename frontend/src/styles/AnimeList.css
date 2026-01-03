@@ -1,0 +1,129 @@
+.anime-list {
+  padding: 20px;
+}
+
+.anime-list h2 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 30px;
+  font-size: 28px;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #fff;
+}
+
+.error {
+  color: #ff6b6b;
+}
+
+.no-anime {
+  text-align: center;
+  color: #aaa;
+  padding: 40px;
+  font-size: 16px;
+}
+
+.anime-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.anime-card {
+  background: #1a1a2e;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #16213e;
+}
+
+.anime-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0, 255, 136, 0.2);
+  border-color: #00ff88;
+}
+
+.anime-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  background: #0f3460;
+}
+
+.anime-info {
+  padding: 15px;
+}
+
+.anime-info h3 {
+  color: #00ff88;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anime-info p {
+  color: #aaa;
+  font-size: 13px;
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.rating {
+  color: #ffd700 !important;
+  font-weight: bold;
+}
+
+.status,
+.episodes,
+.genre {
+  color: #00ff88 !important;
+}
+
+.description {
+  color: #ccc !important;
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: transform 0.2s ease;
+  padding: 5px;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.2);
+}
+
+.favorite-btn.active {
+  color: #ff6b6b;
+}
+
+@media (max-width: 768px) {
+  .anime-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .anime-card {
+    min-width: 0;
+  }
+}
