@@ -5,7 +5,13 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "scrape": "node scrapers/scraper.js scrape",
+    "scrape:page": "node scrapers/scraper.js scrape --page",
+    "scrape:test": "node scrapers/scraper.js scrape --test",
+    "scrape:latino": "node scrapers/scrapeLatino.js",
+    "scrape:subtitulado": "node scrapers/scrapeSubtitulado.js",
+    "scrape:advanced": "node scrapers/scrapeSubtitulado.js"
   },
   "keywords": ["anime", "api", "express", "postgres"],
   "author": "AnimeScape",

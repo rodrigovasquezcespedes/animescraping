@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS anime_status (
 -- ---------- ANIME ----------
 CREATE TABLE IF NOT EXISTS anime (
   id SERIAL PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
+  title VARCHAR(255) NOT NULL UNIQUE,
   description TEXT,
   image_url VARCHAR(500),
   rating DECIMAL(3,1) CHECK (rating BETWEEN 0 AND 10),

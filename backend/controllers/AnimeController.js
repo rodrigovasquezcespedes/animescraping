@@ -3,10 +3,11 @@ const AnimeModel = require('../models/AnimeModel');
 class AnimeController {
   async getAll(req, res) {
     try {
-      const { limit = 10, offset = 0 } = req.query;
-      const data = await AnimeModel.getAll(limit, offset);
-      res.json({ success: true, data });
+      const { limit = 100, offset = 0, audioType } = req.query;
+      const data = await AnimeModel.getAll(limit, offset, audioType);
+      res.json(data || []);
     } catch (err) {
+      console.error('Error getAll:', err);
       res.status(500).json({ success: false, error: err.message });
     }
   }

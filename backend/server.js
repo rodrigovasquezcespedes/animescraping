@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, process.env.WEBOS_URL],
+  origin: ['http://localhost:5173', process.env.FRONTEND_URL].filter(Boolean),
   credentials: true
 }));
 app.use(express.json());
@@ -20,6 +20,4 @@ app.use('/api/anime', animeRoutes);
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Backend corriendo en http://localhost:${PORT}`);
-  console.log(`📡 GET /api/anime - Lista de animes`);
-  console.log(`📺 GET /api/anime/:id - Anime por ID`);
 });

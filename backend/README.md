@@ -18,9 +18,7 @@ cp .env.example .env
 
 2. Edita `.env` con tus credenciales de PostgreSQL
 
-## Base de datos
-
-Ejecuta el script de inicialización:
+3. Inicializa la base de datos:
 ```bash
 psql -U postgres -d animescraping -f db/init.sql
 ```
@@ -28,15 +26,27 @@ psql -U postgres -d animescraping -f db/init.sql
 ## Ejecutar
 
 ```bash
-npm run dev    # Modo desarrollo (con nodemon)
-npm start      # Modo producción
+npm run dev     # Modo desarrollo
+npm start       # Modo producción
+```
+
+## Scraping
+
+```bash
+# Anime Subtitulado (AnimeFlv)
+npm run scrape:subtitulado  # Primera página de prueba
+
+# Anime Latino (AnimeOnlineNinja)
+npm run scrape:latino        # Primera página de prueba
+
+# Scraping avanzado (página específica)
+npm run scrape:page N        # Página específica
+npm run scrape:test          # Test (solo primera página)
 ```
 
 El servidor estará en `http://localhost:5000`
 
 ## API Endpoints
 
-- `GET /api/anime` - Obtener todos los animes (con paginación)
-  - Query params: `limit`, `offset`
+- `GET /api/anime` - Obtener todos los animes
 - `GET /api/anime/:id` - Obtener anime por ID
-
