@@ -10,8 +10,16 @@ const sql = postgres({
 
 class AnimeModel {
   async getAll(limit = 10, offset = 0, audioType = null, category = 'ANIME', genre = null) {
-    let whereConditions = [`category = '${category}'`];
+    let whereConditions = [];
     let params = [];
+
+    // Manejar categorías combinadas
+    if (category === 'SERIE') {
+      // Series incluye SERIE y SERIESFLIX
+      whereConditions.push(`category IN ('SERIE', 'SERIESFLIX')`);
+    } else {
+      whereConditions.push(`category = '${category}'`);
+    }
 
     if (audioType) {
       whereConditions.push('audio_type = $' + (params.length + 1));

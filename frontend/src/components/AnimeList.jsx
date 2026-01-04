@@ -3,30 +3,33 @@ import { animeService } from '../services/animeService'
 import AnimeModal from './AnimeModal'
 import '../styles/AnimeList.css'
 
-export default function AnimeList({ category = 'anime' }) {
+export default function AnimeList({ category = 'anime', genre = '' }) {
   const [animes, setAnimes] = useState([])
   const [favorites, setFavorites] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedAnime, setSelectedAnime] = useState(null)
-  const [genres, setGenres] = useState([])
-  const [selectedGenre, setSelectedGenre] = useState('')
 
   useEffect(() => {
     fetchAnimes()
     fetchFavorites()
-    if (category === 'dorama') {
-      fetchGenres()
-    }
-    setSelectedGenre('') // Reset genre filter when category changes
-  }, [category])
+  }, [category, genre])
 
   const fetchAnimes = async () => {
     try {
       setLoading(true)
       
-      const categoryParam = category === 'dorama' ? 'DORAMA' : 'ANIME'
-      const url = `http://localhost:5000/api/anime?limit=1000&category=${categoryParam}`
+      // Mapear categoría del frontend a la del backend
+      let categoryParam = 'ANIME'
+      if (category === 'dorama') categoryParam = 'DORAMA'
+      else if (category === 'serie') categoryParam = 'SERIE'
+      else if (category === 'pelicula') categoryParam = 'PELICULA'
+      
+      let url = `http://localhost:5000/api/anime?limit=1000&category=${categoryParam}`
+      
+      if (genre) {
+        url += `&genre=${encodeURIComponent(genre)}`
+      }
       
       const response = await fetch(url)
       if (!response.ok) throw new Error('Error fetching anime')
@@ -34,8 +37,10 @@ export default function AnimeList({ category = 'anime' }) {
       
       let filteredAnimes = result.data || result
       
+      const categoryNames = { anime: 'animes', dorama: 'doramas', serie: 'series', pelicula: 'películas' }
+      
       if (!filteredAnimes || filteredAnimes.length === 0) {
-        setError(`Sin ${category === 'dorama' ? 'doramas' : 'animes'}. Ejecuta scraping en /backend`)
+        setError(`Sin ${categoryNames[category] || 'contenido'}${genre ? ` de ${genre}` : ''}. Ejecuta scraping en /backend`)
         setAnimes([])
         setLoading(false)
         return
@@ -61,49 +66,6 @@ export default function AnimeList({ category = 'anime' }) {
     }
   }
 
-  const fetchGenres = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/anime/genres/doramas')
-      if (!response.ok) throw new Error('Error fetching genres')
-      const result = await response.json()
-      setGenres(result.data || [])
-    } catch (err) {
-      console.error('Error fetching genres:', err)
-    }
-  }
-
-  const fetchAnimesByGenre = async (genre = '') => {
-    try {
-      setLoading(true)
-      
-      const categoryParam = category === 'dorama' ? 'DORAMA' : 'ANIME'
-      let url = `http://localhost:5000/api/anime?limit=1000&category=${categoryParam}`
-      
-      if (genre) {
-        url += `&genre=${encodeURIComponent(genre)}`
-      }
-      
-      const response = await fetch(url)
-      if (!response.ok) throw new Error('Error fetching anime')
-      const result = await response.json()
-      
-      let filteredAnimes = result.data || result
-      
-      setAnimes(filteredAnimes || [])
-      setError(null)
-    } catch (err) {
-      console.error('Error:', err)
-      setError('Error conectando con el backend. Verifica que esté corriendo.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGenreChange = (genre) => {
-    setSelectedGenre(genre)
-    fetchAnimesByGenre(genre)
-  }
-
   const toggleFavorite = async (animeId, e) => {
     e.stopPropagation()
     try {
@@ -123,13 +85,20 @@ export default function AnimeList({ category = 'anime' }) {
     }
   }
 
-  if (loading) return <div className="loading">Cargando animes...</div>
+  if (loading) return <div className="loading">Cargando...</div>
   if (error) return <div className="error">Error: {error}</div>
+
+  const categoryNames = { anime: 'animes', dorama: 'doramas', serie: 'series', pelicula: 'películas' }
 
   return (
     <div className="anime-list">
+      {/* Mostrar título con género si está seleccionado */}
+      {category === 'dorama' && genre && (
+        <h2 className="genre-title">🎭 Doramas de {genre}</h2>
+      )}
+
       {animes.length === 0 ? (
-        <p className="no-anime">No hay animes</p>
+        <p className="no-anime">No hay {categoryNames[category] || 'contenido'}{genre ? ` de ${genre}` : ''}</p>
       ) : (
         <div className="anime-grid">
           {animes.map((anime) => (

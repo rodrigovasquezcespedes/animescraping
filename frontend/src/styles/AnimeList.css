@@ -3,6 +3,20 @@
   margin-top: 0.1rem;
 }
 
+/* Título del género */
+.genre-title {
+  color: #e9f0c9;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid rgba(227, 212, 176, 0.3);
+  background: linear-gradient(135deg, #e9f0c9 0%, #3b657a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .anime-list h2 {
   text-align: center;
   color: #e9f0c9;
