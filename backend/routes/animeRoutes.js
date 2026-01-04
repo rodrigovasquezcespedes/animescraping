@@ -4,6 +4,7 @@ const AnimeController = require('../controllers/AnimeController');
 const router = express.Router();
 
 // Anime
+router.get('/genres/doramas', AnimeController.getDoramaGenres.bind(AnimeController));
 router.get('/', AnimeController.getAll.bind(AnimeController));
 router.get('/:id', AnimeController.getById.bind(AnimeController));
 

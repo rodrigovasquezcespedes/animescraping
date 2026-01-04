@@ -3,8 +3,8 @@ const AnimeModel = require('../models/AnimeModel');
 class AnimeController {
   async getAll(req, res) {
     try {
-      const { limit = 100, offset = 0, audioType } = req.query;
-      const data = await AnimeModel.getAll(limit, offset, audioType);
+      const { limit = 100, offset = 0, audioType, category = 'ANIME', genre } = req.query;
+      const data = await AnimeModel.getAll(limit, offset, audioType, category, genre);
       res.json(data || []);
     } catch (err) {
       console.error('Error getAll:', err);
@@ -58,6 +58,16 @@ class AnimeController {
       const { sessionId, animeId } = req.params;
       const isFavorite = await AnimeModel.isAnonymousFavorite(sessionId, animeId);
       res.json({ success: true, isFavorite });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  // Obtener géneros de doramas
+  async getDoramaGenres(req, res) {
+    try {
+      const genres = await AnimeModel.getDoramaGenres();
+      res.json({ success: true, data: genres });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }

@@ -1,12 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const postgres = require('postgres');
-require('dotenv').config();
 
-// Importar configuración de sitios
-const SITE_CONFIGS = require('./siteConfig');
-
-// Función para obtener conexión SQL fresca
 function getSqlConnection() {
   return postgres({
     host: 'localhost',
@@ -22,8 +17,6 @@ function getSqlConnection() {
 
 const BASE_URL = 'https://www3.animeflv.net';
 const BROWSE_URL = `${BASE_URL}/browse`;
-const DELAY_MS = 800;
-
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const headers = {
@@ -31,9 +24,10 @@ const headers = {
 };
 
 class AdvancedAnimeFlvScraper {
-  constructor(audioType = 'SUBTITULADO') {
-    this.audioType = audioType; // 'LATINO' o 'SUBTITULADO'
-    this.siteConfig = SITE_CONFIGS[audioType];
+  constructor(type = 'SUBTITULADO') {
+    // Determinar si es DORAMA o audioType (LATINO/SUBTITULADO)
+    this.audioType = type;
+    this.category = 'ANIME';
     this.stats = {
       totalPages: 0,
       totalAnimes: 0,
@@ -42,7 +36,7 @@ class AdvancedAnimeFlvScraper {
       errors: 0,
       duplicates: 0
     };
-    this.allAnimes = new Set(); // Para evitar duplicados
+    this.allAnimes = new Set();
   }
 
   /**
@@ -82,31 +76,19 @@ class AdvancedAnimeFlvScraper {
    */
   async scrapePageAnimes(pageNum) {
     try {
-      const url = `${this.siteConfig.browseUrl}?page=${pageNum}`;
-      const response = await axios.get(url, { 
-        headers: this.siteConfig.headers, 
-        timeout: 15000 
-      });
+      const url = `${BROWSE_URL}?page=${pageNum}`;
+      const response = await axios.get(url, { headers, timeout: 15000 });
       const $ = cheerio.load(response.data);
       
       const animes = [];
       
-      // Los animes están dentro de articles con clase "Anime" o similar
-      $('article.Anime, article.anime, .anime-item, .item, article').each((i, elem) => {
+      $('article.Anime').each((i, elem) => {
         try {
           const $item = $(elem);
-          
-          // Extraer datos principales - El link principal es article > a
           const mainLink = $item.find('> a').first();
           const animeUrl = mainLink.attr('href') || '';
-          
-          // Extraer título desde h3.Title
           const title = $item.find('h3.Title').text().trim();
-          
-          // Extraer slug de la URL
-          const animeSlug = animeUrl.replace('/anime/', '').split('/')[0];
-          
-          // Extraer imagen
+          const animeSlug = animeUrl.replace('/anime/', '').split('/').filter(x => x).pop() || '';
           const imageUrl = $item.find('img').first().attr('src') || '';
           
           // Estado - buscar en el texto o usar predeterminado
@@ -367,7 +349,7 @@ class AdvancedAnimeFlvScraper {
       const episodesValue = parseInt(details.episodesCount) || 0;
       
       const animeResult = await sql`
-        INSERT INTO anime (title, description, image_url, rating, episodes_count, status_id, audio_type)
+        INSERT INTO anime (title, description, image_url, rating, episodes_count, status_id, audio_type, category)
         VALUES (
           ${anime.title},
           ${details.description || ''},
@@ -375,7 +357,8 @@ class AdvancedAnimeFlvScraper {
           ${ratingValue},
           ${episodesValue},
           ${statusId},
-          ${this.audioType}
+          ${this.audioType},
+          ${this.category}
         )
         RETURNING id
       `;

@@ -9,27 +9,51 @@ const sql = postgres({
 });
 
 class AnimeModel {
-  async getAll(limit = 10, offset = 0, audioType = null) {
+  async getAll(limit = 10, offset = 0, audioType = null, category = 'ANIME', genre = null) {
+    let whereConditions = [`category = '${category}'`];
+    let params = [];
+
     if (audioType) {
-      return await sql`
-        SELECT * FROM anime 
-        WHERE audio_type = ${audioType}
-        ORDER BY id DESC
-        LIMIT ${parseInt(limit)} 
-        OFFSET ${parseInt(offset)}
-      `;
+      whereConditions.push('audio_type = $' + (params.length + 1));
+      params.push(audioType);
     }
-    return await sql`
+
+    if (genre) {
+      whereConditions.push('genre = $' + (params.length + 1));
+      params.push(genre);
+    }
+
+    const whereClause = whereConditions.join(' AND ');
+    
+    // Construir la query dinámicamente
+    const query = `
       SELECT * FROM anime 
+      WHERE ${whereClause}
       ORDER BY id DESC
-      LIMIT ${parseInt(limit)} 
-      OFFSET ${parseInt(offset)}
+      LIMIT $${params.length + 1}
+      OFFSET $${params.length + 2}
     `;
+    
+    params.push(parseInt(limit), parseInt(offset));
+    
+    return await sql.unsafe(query, params);
   }
 
   async getById(id) {
-    const result = await sql`SELECT * FROM anime WHERE id = ${id}`;
-    return result[0] || null;
+    const anime = await sql`SELECT * FROM anime WHERE id = ${id}`;
+    if (anime.length === 0) return null;
+    
+    // Obtener episodios del anime
+    const episodes = await sql`
+      SELECT * FROM episode 
+      WHERE anime_id = ${id} 
+      ORDER BY episode_number ASC
+    `;
+    
+    return {
+      ...anime[0],
+      episodes
+    };
   }
 
   // Favoritos anónimos
@@ -67,6 +91,16 @@ class AnimeModel {
       WHERE session_id = ${sessionId} AND anime_id = ${animeId}
     `;
     return result.length > 0;
+  }
+
+  // Obtener géneros únicos de doramas
+  async getDoramaGenres() {
+    const result = await sql`
+      SELECT DISTINCT genre FROM anime 
+      WHERE category = 'DORAMA' AND genre IS NOT NULL AND genre != ''
+      ORDER BY genre ASC
+    `;
+    return result.map(row => row.genre);
   }
 
   // ============== MÉTODOS PARA SCRAPING ==============
