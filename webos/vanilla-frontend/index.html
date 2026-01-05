@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anime Gallery (Vanilla)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Anime Gallery</h1>
+    <nav class="top-menu">
+      <button id="btn-anime" class="menu-btn active">Anime</button>
+      <button id="btn-dorama" class="menu-btn">Dorama</button>
+      <button id="btn-peliculas" class="menu-btn">Películas</button>
+      <button id="btn-series" class="menu-btn">Series</button>
+    </nav>
+    <button id="show-favorites">Favoritos</button>
+  </header>
+  <main>
+    <section id="anime-list"></section>
+    <section id="favorites-list" style="display:none;"></section>
+  </main>
+  <div id="modal" class="modal" style="display:none;"></div>
+  <script src="main.js"></script>
+</body>
+</html>

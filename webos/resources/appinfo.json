@@ -1,0 +1,13 @@
+{
+  "id": "com.cinotv.webos",
+  "version": "1.0.0",
+  "vendor": "CinoTV",
+  "type": "web",
+  "main": "index.html",
+  "title": "CinoTV Anime",
+  "icon": "icon.png",
+  "largeIcon": "icon-large.png",
+  "resolution": "1920x1080",
+  "requiredPermissions": ["internet"],
+  "category": "entertainment"
+}
