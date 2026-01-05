@@ -1,6 +1,50 @@
+/* Ocultar scroll en todas las páginas principales */
+body, html {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+body::-webkit-scrollbar,
+html::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
 .anime-list {
   padding: 20px;
   margin-top: 0.1rem;
+}
+
+/* Scrollbar estilo modal */
+
+.anime-list,
+.anime-grid {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
+.anime-list::-webkit-scrollbar,
+.anime-grid::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.anime-list::-webkit-scrollbar,
+.anime-grid::-webkit-scrollbar {
+  width: 8px;
+}
+.anime-list::-webkit-scrollbar-track,
+.anime-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.anime-list::-webkit-scrollbar-thumb,
+.anime-grid::-webkit-scrollbar-thumb {
+  background: rgba(59, 101, 122, 0.6);
+  border-radius: 4px;
+}
+.anime-list::-webkit-scrollbar-thumb:hover,
+.anime-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 101, 122, 0.8);
 }
 
 /* Título del género */
