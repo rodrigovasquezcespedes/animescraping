@@ -57,9 +57,6 @@ export default function Favorites() {
                 >
                   ❤️
                 </button>
-                <span className={`audio-badge ${anime.audio_type === 'LATINO' ? 'latino' : 'subtitulado'}`}>
-                  {anime.audio_type === 'LATINO' ? 'LAT' : 'SUB'}
-                </span>
               </div>
               <div className="anime-info">
                 <h3>{anime.title}</h3>

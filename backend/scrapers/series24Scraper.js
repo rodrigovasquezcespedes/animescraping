@@ -39,25 +39,48 @@ class Series24Scraper {
       const series = [];
       
       // Buscar los links de posters
-      $('a.Posters-link').each((i, elem) => {
+      const posterLinks = $('a.Posters-link').toArray();
+      for (const elem of posterLinks) {
         const $item = $(elem);
-        
         const url = $item.attr('href') || '';
         const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
         const title = $item.find('.listing-content p').text().trim();
         const imageUrl = $item.find('img').attr('src') || '';
-        
         if (title && url) {
+          // Extraer descripción y fecha de estreno desde la página de detalle
+          let description = '';
+          let releaseDate = '';
+          try {
+            const detailResp = await axios.get(fullUrl, { headers: this.headers, timeout: 20000 });
+            const $$ = cheerio.load(detailResp.data);
+            // Descripción: buscar div.sinopsis, div#sinopsis, o el primer p largo
+            description = $$(".sinopsis, #sinopsis, .description, .Description").first().text().trim();
+            if (!description) {
+              description = $$("p").filter((i, el) => $$(el).text().length > 40).first().text().trim();
+            }
+            // Fecha de estreno: buscar span, div, o p que contenga "Fecha de estreno" o "Estreno"
+            $$("span, div, p, li").each((i, el) => {
+              const txt = $$(el).text();
+              if (/Fecha de estreno|Estreno/i.test(txt)) {
+                const match = txt.match(/(\d{1,2}\/\d{1,2}\/\d{4})|(\d{4}-\d{2}-\d{2})|(\d{4})/);
+                if (match) releaseDate = match[0];
+              }
+            });
+          } catch (err) {
+            // Si falla, dejar vacío
+          }
           series.push({
             title,
             url: fullUrl,
             imageUrl,
             status: 'EN EMISION',
             audioType: 'SUBTITULADO',
-            category: 'SERIE'
+            category: 'SERIE',
+            description,
+            releaseDate
           });
         }
-      });
+      }
       
       console.log(`      ✅ Encontradas: ${series.length} series`);
       return series;
@@ -93,17 +116,18 @@ class Series24Scraper {
 
         // Insertar
         await sql`
-          INSERT INTO anime (title, description, image_url, rating, episodes_count, status_id, audio_type, category, genre)
+          INSERT INTO anime (title, description, image_url, rating, episodes_count, status_id, audio_type, category, genre, release_date)
           VALUES (
             ${serie.title},
-            ${'Serie disponible en Series24'},
+            ${serie.description || 'Serie disponible en Series24'},
             ${serie.imageUrl},
             ${0},
             ${1},
             ${statusId},
             ${serie.audioType},
             ${serie.category},
-            ${'General'}
+            ${'General'},
+            ${serie.releaseDate || null}
           )
         `;
         saved++;

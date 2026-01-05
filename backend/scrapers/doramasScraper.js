@@ -16,6 +16,63 @@ function getSqlConnection() {
 }
 
 class DoramasScraper {
+
+    /**
+     * Extrae nombre, descripción y capítulos de un dorama desde su página de detalle
+     * @param {string} doramaUrl - URL de la página del dorama
+     * @returns {Promise<{title: string, description: string, episodes: Array<{title: string, url: string}>}>}
+     */
+    async scrapeDoramaDetails(doramaUrl) {
+      try {
+        const response = await axios.get(doramaUrl, { headers: this.headers, timeout: 15000 });
+        const $ = cheerio.load(response.data);
+
+        // Título principal
+        const title = $('h1').first().text().trim() || $('title').first().text().trim();
+
+        // Descripción (buscar bloque bajo "Descripción:")
+        let description = '';
+        $('*').each((i, el) => {
+          if ($(el).text().trim().toLowerCase().startsWith('descripción')) {
+            // Buscar el siguiente elemento de texto relevante
+            let next = $(el).next();
+            while (next && next.length && !next.text().trim()) {
+              next = next.next();
+            }
+            description = next && next.length ? next.text().trim() : '';
+          }
+        });
+        if (!description) {
+          // Fallback: buscar el primer párrafo largo
+          description = $('p').filter((i, el) => $(el).text().length > 40).first().text().trim();
+        }
+
+        // Capítulos: enlaces que contienen "Cap" y el número
+        const episodes = [];
+        $('a').each((i, el) => {
+          const text = $(el).text().trim();
+          const href = $(el).attr('href');
+          if (/cap[ií]tulo?\s*\d+/i.test(text) && href && href.includes('/cap/')) {
+            episodes.push({
+              title: text,
+              url: href.startsWith('http') ? href : this.baseUrl + href
+            });
+          }
+        });
+
+        // Ordenar episodios por número descendente (opcional)
+        episodes.sort((a, b) => {
+          const numA = parseInt(a.title.match(/\d+/));
+          const numB = parseInt(b.title.match(/\d+/));
+          return numB - numA;
+        });
+
+        return { title, description, episodes };
+      } catch (error) {
+        console.log(`❌ Error extrayendo detalles de dorama: ${doramaUrl}`, error.message);
+        return { title: '', description: '', episodes: [] };
+      }
+    }
   constructor() {
     this.baseUrl = 'https://doramasmp4.my';
     this.browseUrl = 'https://doramasmp4.my/series';
@@ -71,38 +128,47 @@ class DoramasScraper {
   async scrapePage(pageNum, pageUrl = null, genre = 'general') {
     try {
       const url = pageUrl || `${this.browseUrl}?page=${pageNum}`;
-      
       const response = await axios.get(url, { headers: this.headers, timeout: 15000 });
       const $ = cheerio.load(response.data);
-      
+
       const doramas = [];
-      
-      $('article.item').each((i, elem) => {
+      const items = $('article.item').toArray();
+
+      for (const elem of items) {
         const $item = $(elem);
-        
         const $link = $item.find('a').first();
-        const url = $link.attr('href') || '';
+        const doramaUrl = $link.attr('href') || '';
         const title = $link.attr('title') || $link.text().trim();
-        
         const $img = $item.find('img').first();
         const imageUrl = $img.attr('src') || $img.attr('data-src') || '';
-        
-        if (title && url) {
+
+        if (title && doramaUrl) {
+          // Obtener detalles completos
+          const details = await this.scrapeDoramaDetails(doramaUrl.startsWith('http') ? doramaUrl : this.baseUrl + doramaUrl);
           doramas.push({
-            title: title.replace(/\d{4}$/, '').trim(),
-            url,
+            title: details.title || title.replace(/\d{4}$/, '').trim(),
+            url: doramaUrl,
             imageUrl,
+            description: details.description,
+            episodes: details.episodes,
             status: 'FINALIZADO',
             audioType: 'LATINO',
             category: 'DORAMA',
             genre: this.translateGenre(genre)
           });
         }
-      });
-      
+      }
+
       console.log(`      ✅ Encontrados: ${doramas.length} doramas`);
+      // Mostrar info de cada dorama
+      doramas.forEach(d => {
+        console.log('---');
+        console.log('Título:', d.title);
+        console.log('Descripción:', d.description);
+        console.log('Capítulos:', d.episodes.map(e => e.title).join(', '));
+      });
       return doramas;
-      
+
     } catch (error) {
       console.log(`      ❌ Error en página ${pageNum}:`, error.message);
       return [];
@@ -136,7 +202,9 @@ class DoramasScraper {
           SELECT id FROM anime WHERE title = ${dorama.title} AND category = 'DORAMA'
         `;
 
+        let animeId;
         if (existing.length > 0) {
+          animeId = existing[0].id;
           duplicates++;
           continue;
         }
@@ -147,23 +215,36 @@ class DoramasScraper {
         `;
         const statusId = statusResult[0]?.id || 2;
 
-        // Insertar
-        await sql`
+        // Insertar dorama con descripción real
+        const insertResult = await sql`
           INSERT INTO anime (title, description, image_url, rating, episodes_count, status_id, audio_type, category, genre)
           VALUES (
             ${dorama.title},
-            ${'Dorama disponible'},
+            ${dorama.description || 'Dorama disponible'},
             ${dorama.imageUrl},
             ${0},
-            ${1},
+            ${dorama.episodes ? dorama.episodes.length : 1},
             ${statusId},
             ${dorama.audioType},
             ${dorama.category},
             ${dorama.genre}
-          )
+          ) RETURNING id
         `;
+        animeId = insertResult[0].id;
         saved++;
-        
+
+        // Guardar capítulos si existen
+        if (dorama.episodes && dorama.episodes.length > 0) {
+          for (let i = 0; i < dorama.episodes.length; i++) {
+            const ep = dorama.episodes[i];
+            await sql`
+              INSERT INTO episode (anime_id, episode_number, title, url)
+              VALUES (${animeId}, ${dorama.episodes.length - i}, ${ep.title}, ${ep.url})
+              ON CONFLICT (anime_id, episode_number) DO NOTHING
+            `;
+          }
+        }
+
       } catch (error) {
         console.log(`   ⚠️  Error guardando "${dorama.title}":`, error.message);
       }
@@ -213,16 +294,15 @@ class DoramasScraper {
     let grandTotalSaved = 0;
     let grandTotalDuplicates = 0;
     
-    // Scrapear cada género
+    // Scrapear cada género (todas las páginas)
     for (const genre of this.genres) {
       try {
-        const { saved, duplicates } = await this.scrapeGenre(genre, 5); // Máximo 5 páginas por género
+        const { saved, duplicates } = await this.scrapeGenre(genre, Number.MAX_SAFE_INTEGER); // Sin límite de páginas
         grandTotalSaved += saved;
         grandTotalDuplicates += duplicates;
       } catch (error) {
         console.log(`❌ Error en género ${genre}:`, error.message);
       }
-      
       // Esperar entre géneros
       await new Promise(resolve => setTimeout(resolve, 2000));
     }

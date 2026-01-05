@@ -71,7 +71,7 @@ function App() {
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
         <div className="container-fluid px-4">
           <a className="navbar-brand fw-bold fs-5" href="#" style={{ background: 'linear-gradient(135deg, #e9f0c9 0%, #3b657a 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            AnimeScape
+            CinoTV
           </a>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span className="navbar-toggler-icon"></span>
@@ -88,34 +88,28 @@ function App() {
                 </a>
               </li>
               
-              {/* Dorama con dropdown de categorías */}
+              {/* Dorama como dropdown con géneros como submenú */}
               <li className={`nav-item dropdown ${dropdownOpen ? 'show' : ''}`} ref={dropdownRef}>
                 <a 
                   className={`nav-link dropdown-toggle ${category === 'dorama' && !showFavorites ? 'active' : ''}`}
                   href="#"
                   role="button"
                   aria-expanded={dropdownOpen}
-                  onClick={toggleDropdown}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDoramaClick();
+                    setDropdownOpen(!dropdownOpen);
+                  }}
                 >
                   Dorama
                 </a>
                 <ul className={`dropdown-menu dropdown-menu-dark ${dropdownOpen ? 'show' : ''}`}>
-                  <li>
-                    <a 
-                      className={`dropdown-item ${category === 'dorama' && selectedGenre === '' ? 'active' : ''}`}
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handleDoramaClick() }}
-                    >
-                      📺 Todos los Doramas
-                    </a>
-                  </li>
-                  <li><hr className="dropdown-divider" /></li>
                   {doramaGenres.map(genre => (
                     <li key={genre}>
                       <a 
                         className={`dropdown-item ${selectedGenre === genre ? 'active' : ''}`}
                         href="#"
-                        onClick={(e) => { e.preventDefault(); handleGenreClick(genre) }}
+                        onClick={(e) => { e.preventDefault(); handleGenreClick(genre); setDropdownOpen(true); }}
                       >
                         🎭 {genre}
                       </a>

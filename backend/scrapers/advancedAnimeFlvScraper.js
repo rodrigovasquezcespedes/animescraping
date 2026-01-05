@@ -18,6 +18,7 @@ function getSqlConnection() {
 const BASE_URL = 'https://www3.animeflv.net';
 const BROWSE_URL = `${BASE_URL}/browse`;
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const DELAY_MS = 800; // milisegundos entre requests
 
 const headers = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -37,6 +38,13 @@ class AdvancedAnimeFlvScraper {
       duplicates: 0
     };
     this.allAnimes = new Set();
+    // Inicializar siteConfig correctamente
+    this.siteConfig = {
+      name: 'AnimeFLV',
+      baseUrl: BASE_URL,
+      browseUrl: BROWSE_URL,
+      headers
+    };
   }
 
   /**
@@ -427,6 +435,7 @@ class AdvancedAnimeFlvScraper {
    * Ejecutar scraping completo
    */
   async startFullScraping() {
+    const sql = getSqlConnection();
     try {
       console.log('🚀 ============================================');
       console.log('🚀 INICIANDO SCRAPING AVANZADO DE ANIMEFLV');
@@ -553,3 +562,13 @@ class AdvancedAnimeFlvScraper {
 }
 
 module.exports = AdvancedAnimeFlvScraper;
+
+// Ejecutar el scraper si se llama directamente
+if (require.main === module) {
+  (async () => {
+    const AdvancedAnimeFlvScraper = require('./advancedAnimeFlvScraper');
+    const scraper = new AdvancedAnimeFlvScraper();
+    await scraper.startFullScraping();
+    process.exit(0);
+  })();
+}

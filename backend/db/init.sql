@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS anime (
   rating DECIMAL(3,1) CHECK (rating BETWEEN 0 AND 10),
   episodes_count INT,
   status_id INT NOT NULL,
+  release_date VARCHAR(32),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_anime_status

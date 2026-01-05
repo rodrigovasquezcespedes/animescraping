@@ -36,6 +36,16 @@ export default function AnimeList({ category = 'anime', genre = '' }) {
       const result = await response.json()
       
       let filteredAnimes = result.data || result
+      // Ordenar por año descendente (más nuevos primero)
+      filteredAnimes = filteredAnimes.sort((a, b) => {
+        // Si ambos tienen año, comparar
+        if (a.year && b.year) return b.year - a.year
+        // Si solo uno tiene año, ese va primero
+        if (a.year && !b.year) return -1
+        if (!a.year && b.year) return 1
+        // Si ninguno tiene año, mantener orden
+        return 0
+      })
       
       const categoryNames = { anime: 'animes', dorama: 'doramas', serie: 'series', pelicula: 'películas' }
       
@@ -118,9 +128,6 @@ export default function AnimeList({ category = 'anime', genre = '' }) {
                 >
                   {favorites.has(anime.id) ? '❤️' : '🤍'}
                 </button>
-                <span className={`audio-badge ${anime.audio_type === 'LATINO' ? 'latino' : 'subtitulado'}`}>
-                  {anime.audio_type === 'LATINO' ? 'LAT' : 'SUB'}
-                </span>
               </div>
               <div className="anime-info">
                 <h3>{anime.title}</h3>

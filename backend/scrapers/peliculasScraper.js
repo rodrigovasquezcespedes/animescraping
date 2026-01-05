@@ -39,25 +39,48 @@ class PeliculasScraper {
       const peliculas = [];
       
       // Buscar los links de posters
-      $('a.Posters-link').each((i, elem) => {
+      const posterLinks = $('a.Posters-link').toArray();
+      for (const elem of posterLinks) {
         const $item = $(elem);
-        
         const url = $item.attr('href') || '';
         const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
         const title = $item.find('.listing-content p').text().trim();
         const imageUrl = $item.find('img').attr('src') || '';
-        
         if (title && url) {
+          // Extraer descripción y fecha de estreno desde la página de detalle
+          let description = '';
+          let releaseDate = '';
+          try {
+            const detailResp = await axios.get(fullUrl, { headers: this.headers, timeout: 20000 });
+            const $$ = cheerio.load(detailResp.data);
+            // Descripción: buscar div.sinopsis, div#sinopsis, o el primer p largo
+            description = $$(".sinopsis, #sinopsis, .description, .Description").first().text().trim();
+            if (!description) {
+              description = $$("p").filter((i, el) => $$(el).text().length > 40).first().text().trim();
+            }
+            // Fecha de estreno: buscar span, div, o p que contenga "Fecha de estreno" o "Estreno"
+            $$("span, div, p, li").each((i, el) => {
+              const txt = $$(el).text();
+              if (/Fecha de estreno|Estreno/i.test(txt)) {
+                const match = txt.match(/(\d{1,2}\/\d{1,2}\/\d{4})|(\d{4}-\d{2}-\d{2})|(\d{4})/);
+                if (match) releaseDate = match[0];
+              }
+            });
+          } catch (err) {
+            // Si falla, dejar vacío
+          }
           peliculas.push({
             title,
             url: fullUrl,
             imageUrl,
             status: 'FINALIZADO',
             audioType: 'SUBTITULADO',
-            category: 'PELICULA'
+            category: 'PELICULA',
+            description,
+            releaseDate
           });
         }
-      });
+      }
       
       console.log(`      ✅ Encontradas: ${peliculas.length} películas`);
       return peliculas;
@@ -93,17 +116,18 @@ class PeliculasScraper {
 
         // Insertar
         await sql`
-          INSERT INTO anime (title, description, image_url, rating, episodes_count, status_id, audio_type, category, genre)
+          INSERT INTO anime (title, description, image_url, rating, episodes_count, status_id, audio_type, category, genre, release_date)
           VALUES (
             ${pelicula.title},
-            ${'Película disponible en Series24'},
+            ${pelicula.description || 'Película disponible en Series24'},
             ${pelicula.imageUrl},
             ${0},
             ${1},
             ${statusId},
             ${pelicula.audioType},
             ${pelicula.category},
-            ${'General'}
+            ${'General'},
+            ${pelicula.releaseDate || null}
           )
         `;
         saved++;
@@ -164,7 +188,8 @@ class PeliculasScraper {
 // Ejecutar si se llama directamente
 if (require.main === module) {
   const scraper = new PeliculasScraper();
-  scraper.scrapeAll(10).then(() => process.exit(0)).catch(err => {
+  // Usar un valor alto para maxBatches para intentar scrapear todas las películas posibles
+  scraper.scrapeAll(1000).then(() => process.exit(0)).catch(err => {
     console.error('Error:', err);
     process.exit(1);
   });

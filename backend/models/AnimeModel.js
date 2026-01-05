@@ -50,17 +50,26 @@ class AnimeModel {
   async getById(id) {
     const anime = await sql`SELECT * FROM anime WHERE id = ${id}`;
     if (anime.length === 0) return null;
-    
+
     // Obtener episodios del anime
     const episodes = await sql`
       SELECT * FROM episode 
       WHERE anime_id = ${id} 
       ORDER BY episode_number ASC
     `;
-    
+
+    // Obtener géneros asociados
+    const genres = await sql`
+      SELECT g.name FROM genre g
+      INNER JOIN anime_genre ag ON ag.genre_id = g.id
+      WHERE ag.anime_id = ${id}
+      ORDER BY g.name ASC
+    `;
+
     return {
       ...anime[0],
-      episodes
+      episodes,
+      genres: genres.map(g => g.name)
     };
   }
 
