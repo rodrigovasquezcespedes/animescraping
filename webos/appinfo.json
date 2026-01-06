@@ -1,0 +1,16 @@
+{
+  "id": "com.rvasquez.animescraping",
+  "version": "1.0.0",
+  "vendor": "rvasquez",
+  "type": "web",
+  "main": "index.html",
+  "title": "AnimeScraping",
+  "icon": "icon.png",
+  "largeIcon": "icon-large.png",
+  "appDescription": "Galería de animes para webOS.",
+  "resolution": "1920x1080",
+  "requiredMemory": 16,
+  "keywords": ["anime", "scraping", "galería", "webos"],
+  "category": ["ENTERTAINMENT"],
+  "visible": true
+}

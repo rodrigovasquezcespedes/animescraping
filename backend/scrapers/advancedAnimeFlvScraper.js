@@ -407,17 +407,30 @@ class AdvancedAnimeFlvScraper {
         }
       }
 
-      // Insertar episodios
+      // Insertar episodios y servidores
       for (const episode of details.episodes) {
         try {
-          await sql`
+          // Insertar episodio
+          const epResult = await sql`
             INSERT INTO episode (anime_id, episode_number, title, url)
             VALUES (${animeId}, ${episode.number}, ${episode.title}, ${episode.url})
-            ON CONFLICT (anime_id, episode_number) DO NOTHING
+            ON CONFLICT (anime_id, episode_number) DO UPDATE SET title = EXCLUDED.title
+            RETURNING id
           `;
+          const episodeId = epResult[0]?.id;
           this.stats.totalEpisodes++;
+          // Insertar servidores de ese episodio
+          if (episode.servers && episode.servers.length > 0 && episodeId) {
+            for (const server of episode.servers) {
+              await sql`
+                INSERT INTO episode_server (episode_id, name, url)
+                VALUES (${episodeId}, ${server.name}, ${server.url})
+                ON CONFLICT DO NOTHING
+              `;
+            }
+          }
         } catch (err) {
-          // Ignorar errores de episodios
+          // Ignorar errores de episodios/servidores
         }
       }
 

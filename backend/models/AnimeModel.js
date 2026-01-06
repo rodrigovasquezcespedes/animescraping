@@ -51,12 +51,20 @@ class AnimeModel {
     const anime = await sql`SELECT * FROM anime WHERE id = ${id}`;
     if (anime.length === 0) return null;
 
-    // Obtener episodios del anime
-    const episodes = await sql`
+    // Obtener episodios y servidores de cada episodio
+    const episodesRaw = await sql`
       SELECT * FROM episode 
       WHERE anime_id = ${id} 
       ORDER BY episode_number ASC
     `;
+    // Para cada episodio, obtener sus servidores
+    const episodes = [];
+    for (const ep of episodesRaw) {
+      const servers = await sql`
+        SELECT * FROM episode_server WHERE episode_id = ${ep.id}
+      `;
+      episodes.push({ ...ep, servers });
+    }
 
     // Obtener géneros asociados
     const genres = await sql`
