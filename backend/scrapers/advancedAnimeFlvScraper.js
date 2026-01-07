@@ -289,6 +289,34 @@ class AdvancedAnimeFlvScraper {
           }
         });
       }
+        
+        // Por cada episodio, extraer los servidores disponibles
+        for (let ep of episodes) {
+          ep.servers = [];
+          try {
+            const epRes = await axios.get(ep.url, { headers: this.siteConfig.headers, timeout: 15000 });
+            const $epPage = cheerio.load(epRes.data);
+            // AnimeFLV: servidores en #episodeServers .RTblDn a[data-player], o en .RTblDn tr
+            $epPage('.RTblDn tr').each((i, row) => {
+              const $row = $epPage(row);
+              const srvName = $row.find('td').eq(0).text().trim() || $row.find('a').text().trim();
+              const srvUrl = $row.find('a').attr('href');
+              if (srvName && srvUrl) {
+                ep.servers.push({ name: srvName, url: srvUrl });
+              }
+            });
+            // Alternativa: buscar en .episode__servers-list a
+            $epPage('.episode__servers-list a').each((i, el) => {
+              const srvName = $epPage(el).text().trim();
+              const srvUrl = $epPage(el).attr('href');
+              if (srvName && srvUrl && !ep.servers.find(s => s.url === srvUrl)) {
+                ep.servers.push({ name: srvName, url: srvUrl });
+              }
+            });
+          } catch (err) {
+            // Si falla, dejar servers vacío
+          }
+        }
       
       return {
         description: description.substring(0, 5000),
