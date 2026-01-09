@@ -62,8 +62,11 @@ export default function AnimeModal({ anime, onClose }) {
                             className={`episode-button${selectedEpisodeId === episode.id ? ' selected' : ''}`}
                             onClick={() => setSelectedEpisodeId(selectedEpisodeId === episode.id ? null : episode.id)}
                           >
-                            <span className="episode-number">Cap. {episode.episode_number}</span>
-                            {episode.title && <span className="episode-title">{episode.title}</span>}
+                            <span className="episode-number">
+                              {episode.title
+                                ? episode.title.replace(/^cap\.?\s*\d+\s*-?\s*/i, '')
+                                : `Episodio ${episode.episode_number}`}
+                            </span>
                           </button>
                           {selectedEpisodeId === episode.id && episode.servers && episode.servers.length > 0 && (
                             <div className="episode-servers-list" style={{ marginTop: '0.3rem', marginLeft: '1.5rem' }}>

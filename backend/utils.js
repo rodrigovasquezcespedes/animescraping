@@ -7,14 +7,14 @@ function sleep(ms) {
 
 function getSqlConnection() {
   return postgres({
-    host: 'localhost',
-    port: 5432,
-    database: 'animescraping',
-    username: 'postgres',
-    password: 'postgres',
-    max: 10,
-    idle_timeout: 20,
-    connect_timeout: 10
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
+    database: process.env.DB_NAME || 'animescraping',
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    max: process.env.DB_MAX ? parseInt(process.env.DB_MAX) : 10,
+    idle_timeout: process.env.DB_IDLE_TIMEOUT ? parseInt(process.env.DB_IDLE_TIMEOUT) : 20,
+    connect_timeout: process.env.DB_CONNECT_TIMEOUT ? parseInt(process.env.DB_CONNECT_TIMEOUT) : 10
   });
 }
 

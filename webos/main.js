@@ -1,4 +1,3 @@
-
 // --- Gestión de favoritos en localStorage ---
 function getFavorites() {
   try {
@@ -61,6 +60,7 @@ function renderAnimeList(animes) {
 }
 const BASE_API_URL = 'http://localhost:5000/api/anime';
 let currentCategory = 'ANIME';
+let lastMenuCategory = 'ANIME'; // Para restaurar el menú activo al salir de favoritos
 
 const animeList = document.getElementById('anime-list');
 const favoritesList = document.getElementById('favorites-list');
@@ -98,8 +98,12 @@ async function showModal(anime) {
       return;
     }
     let episodesArr = data.episodes || [];
-    // Invertir el orden para mostrar el más reciente arriba
-    episodesArr = episodesArr.slice().reverse();
+    // Ordenar episodios por número ascendente (1,2,3...)
+    episodesArr = episodesArr.slice().sort((a, b) => {
+      // Buscar el número de episodio en distintas propiedades
+      const getNum = ep => parseInt(ep.episode_number || ep.number || ep.numero || ep.num || 0, 10);
+      return getNum(a) - getNum(b);
+    });
     let episodesHtml = '';
     if (Array.isArray(episodesArr) && episodesArr.length > 0) {
       const useScroll = episodesArr.length > 3;
@@ -288,7 +292,7 @@ window.toggleServers = toggleServers;
 function renderFavorites() {
   favoritesList.innerHTML = '';
   const favs = getFavorites();
-  favs.forEach(anime => {
+  favs.forEach((anime, idx) => {
     const card = document.createElement('div');
     card.className = 'anime-card';
     card.setAttribute('tabindex', '0');
@@ -308,9 +312,24 @@ function renderFavorites() {
       e.stopPropagation();
       removeFavorite(anime.id);
     };
-    card.onclick = () => showModal(anime);
+    card.onclick = () => {
+      // Quitar selección previa
+      document.querySelectorAll('#favorites-list .anime-card.selected-fav').forEach(el => el.classList.remove('selected-fav'));
+      card.classList.add('selected-fav');
+      showModal(anime);
+    };
     favoritesList.appendChild(card);
   });
+  // Rellenar con divs vacíos para completar la fila de 5
+  const remainder = favs.length % 5;
+  if (remainder !== 0) {
+    for (let i = 0; i < 5 - remainder; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'anime-card';
+      empty.style.visibility = 'hidden';
+      favoritesList.appendChild(empty);
+    }
+  }
 }
 
 function addFavorite(anime) {
@@ -331,14 +350,35 @@ function removeFavorite(id) {
 
 showFavoritesBtn.onclick = () => {
   if (favoritesList.style.display === 'none') {
+    // Guardar el menú activo antes de entrar a favoritos
+    lastMenuCategory = currentCategory;
     renderFavorites();
-    favoritesList.style.display = 'flex';
+    favoritesList.style.display = 'grid'; // Usar grid para mantener 5 columnas
     animeList.style.display = 'none';
     showFavoritesBtn.textContent = 'Ver todos';
+    // Quitar activo de los otros botones
+    document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+    showFavoritesBtn.classList.add('active');
   } else {
     favoritesList.style.display = 'none';
     animeList.style.display = 'flex';
     showFavoritesBtn.textContent = 'Favoritos';
+    showFavoritesBtn.classList.remove('active');
+    // Restaurar el menú que estaba activo antes de favoritos
+    document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+    if (lastMenuCategory === 'DORAMA') {
+      document.getElementById('btn-dorama').classList.add('active');
+      currentCategory = 'DORAMA';
+    } else if (lastMenuCategory === 'PELICULA') {
+      document.getElementById('btn-peliculas').classList.add('active');
+      currentCategory = 'PELICULA';
+    } else if (lastMenuCategory === 'SERIE') {
+      document.getElementById('btn-series').classList.add('active');
+      currentCategory = 'SERIE';
+    } else {
+      document.getElementById('btn-anime').classList.add('active');
+      currentCategory = 'ANIME';
+    }
   }
 };
 

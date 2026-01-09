@@ -19,10 +19,10 @@
 
 .servers-list-column {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  flex-direction: row;
+  gap: 12px;
   width: 100%;
-  align-items: flex-start;
+  align-items: center;
 }
 .server-button {
   background: linear-gradient(120deg, #23384a 60%, #3b657a 100%);
@@ -130,6 +130,18 @@ header {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  width: 100%;
+  box-sizing: border-box;
+  /* Fijo siempre visible */
+}
+
+body {
+  padding-top: 90px !important;
 }
 
 .top-menu {
@@ -152,8 +164,22 @@ header {
 }
 .menu-btn.active, .menu-btn:hover {
   background: var(--accent-hover);
-  color: var(--text-primary);
-  text-shadow: 0 0 8px rgba(59, 101, 122, 0.3);
+  color: #ffe7b2 !important;
+  text-shadow: 0 0 8px #ffe7b2, 0 0 8px rgba(59, 101, 122, 0.3);
+  border: 2.5px solid #ffe7b2;
+  box-shadow: 0 0 0 3px #ffe7b2aa, 0 2px 8px rgba(59,101,122,0.18);
+  transform: scale(1.08);
+  outline: 2px solid #ffe7b2;
+}
+
+#show-favorites.active {
+  background: var(--accent-hover);
+  color: #ffe7b2 !important;
+  text-shadow: 0 0 8px #ffe7b2, 0 0 8px rgba(59, 101, 122, 0.3);
+  border: 2.5px solid #ffe7b2;
+  box-shadow: 0 0 0 3px #ffe7b2aa, 0 2px 8px rgba(59,101,122,0.18);
+  transform: scale(1.08);
+  outline: 2px solid #ffe7b2;
 }
 
 
@@ -163,17 +189,41 @@ html, body {
   width: 100%;
 }
 
-#anime-list, #favorites-list {
+/* Favoritos: grid de 5 columnas y cards pequeños */
+#favorites-list {
   display: grid;
   grid-auto-flow: row;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+  width: 100%;
+  min-height: 100vh;
+  padding: 2.5rem 2vw 2.5rem 2vw;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+
+/* Unificar cards de favoritos y pantalla principal */
+
+#anime-list {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
   width: 100%;
   min-height: 150vh;
   padding: 40px 40px 40px 40px;
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
+}
+
+#anime-list .anime-card, #favorites-list .anime-card {
+  max-width: 380px;
+  min-width: 240px;
+  height: auto;
+  min-height: 418px;
 }
 
 #anime-list::-webkit-scrollbar,
@@ -188,10 +238,18 @@ html, body {
   margin: 0;
 }
 
-.anime-card {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
+
+
+  /* Card de favorito seleccionado */
+  #favorites-list .anime-card.selected-fav {
+  box-shadow: 0 0 0 6px #ffe7b2, 0 24px 64px 0 rgba(0,0,0,0.65), 0 2px 12px 0 #000a !important;
+  border: 3.5px solid #ffe7b2 !important;
+  outline: 4px solid #ffe7b2 !important;
+  background: linear-gradient(120deg, #ffe7b2 60%, #3b657a 100%) !important;
+  transform: scale(1.07) !important;
+  z-index: 10 !important;
+  filter: brightness(1.08) saturate(1.2);
+  transition: box-shadow 0.2s, outline 0.2s, background 0.2s, transform 0.2s;
 }
 .anime-card {
   width: 100%;
@@ -226,10 +284,10 @@ html, body {
   flex-direction: column;
   align-items: stretch;
   width: 100%;
-  max-width: 380px;
-  min-width: 240px;
-  height: auto;
-  min-height: 418px;
+  max-width: 170px;
+  min-width: 140px;
+  height: 220px;
+  min-height: 180px;
   margin: 0 auto;
   outline: none;
   position: relative;

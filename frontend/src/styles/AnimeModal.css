@@ -69,8 +69,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 10px;
-    max-height: 900px;
-    min-height: 300px;
+    max-height: none;
     overflow-y: visible;
     padding: 8px;
     background: rgba(0, 0, 0, 0.2);
@@ -257,21 +256,45 @@
 }
 
 .modal-episodes-grid {
+    background: linear-gradient(135deg, rgba(59, 101, 122, 0.18) 0%, rgba(227, 212, 176, 0.10) 100%);
+    border-radius: 18px;
+    padding: 32px 8px 24px 8px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  min-height: 120px;
+  max-height: 500px;
+  align-items: center;
+  justify-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: none;
-  min-height: 180px;
-  overflow-y: visible;
+  min-height: 400px;
+  height: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3b657a #222;
+}
+.modal-episodes-grid::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-episodes-grid::-webkit-scrollbar-thumb {
+  background: #3b657a;
+  border-radius: 4px;
+}
+.modal-episodes-grid::-webkit-scrollbar-track {
+  background: #222;
+  border-radius: 4px;
+}
 
 .modal-episodes-scroll {
   flex: 1 1 auto;
-  min-height: 300px;
-  margin-bottom: 0.6rem;
-    overflow-y: auto;
-    max-height: 1000px;
-    box-sizing: border-box;
-    padding-right: 0.5rem;
+    min-height: unset;
+    margin-bottom: 0.6rem;
+    overflow-x: unset;
+    overflow-y: unset;
+    max-height: unset;
+    padding-right: 0;
 }
 .modal-episodes-scroll::-webkit-scrollbar {
   width: 8px;
@@ -290,18 +313,56 @@
 }
 
 .episode-button {
-  background: linear-gradient(135deg, rgba(59, 101, 122, 0.6) 0%, rgba(18, 49, 66, 0.6) 100%);
-  border: 1px solid rgba(227, 212, 176, 0.2);
-  color: #e9f0c9;
-  padding: 12px 8px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #f7e9c5 0%, #e9f0c9 100%);
+  border: 2.5px solid #bfae7c;
+  color: #2d3a2e;
+  padding: 22px 0 16px 0;
+  border-radius: 32px 8px 32px 8px;
+  box-shadow: 0 4px 18px rgba(191,174,124,0.18), 0 1.5px 8px 0 #0003;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 auto;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s, color 0.2s;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  font-size: 13px;
+    min-height: 0;
+    max-height: none;
+    align-items: stretch;
+    justify-items: stretch;
+    overflow-y: unset;
+    overflow-x: unset;
+    height: auto;
+  max-width: none;
+  min-height: 0;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, rgba(18, 49, 66, 0.92) 0%, rgba(20, 32, 38, 0.92) 100%);
+  border: 1.5px solid rgba(227, 212, 176, 0.13);
+  color: #e9f0c9;
+  box-shadow: 0 2px 8px rgba(59,101,122,0.10), 0 1.5px 8px 0 #000a;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18), 0 1.5px 8px 0 #000a;
+  outline: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: 0 auto;
+}
+.episode-button:hover, .episode-button.selected {
+  background: linear-gradient(135deg, #23384a 60%, #3b657a 100%);
+  border-color: #7ecfff;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(59,101,122,0.25), 0 2px 12px 0 #000a;
+  transform: translateY(-2px) scale(1.04);
 }
 
 .episode-button:hover {
@@ -313,11 +374,11 @@
 
 .episode-number {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .episode-title {
-  font-size: 11px;
+  font-size: 10px;
   color: #d4d8b8;
   text-align: center;
   overflow: hidden;
