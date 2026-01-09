@@ -1,12 +1,5 @@
-const postgres = require('postgres');
-
-const sql = postgres({
-  host: 'localhost',
-  port: 5432,
-  database: 'animescraping',
-  username: 'postgres',
-  password: 'postgres',
-});
+const { getSqlConnection } = require('../utils');
+const sql = getSqlConnection();
 
 class AnimeModel {
   async getAll(limit = 10, offset = 0, audioType = null, category = 'ANIME', genre = null) {
@@ -242,25 +235,6 @@ class AnimeModel {
     return result[0]?.count || 0;
   }
 
-  /**
-   * Limpiar todos los datos (solo para desarrollo)
-   */
-  async truncateAllData() {
-    try {
-      await sql`TRUNCATE TABLE anonymous_favorite CASCADE`;
-      await sql`TRUNCATE TABLE favorite CASCADE`;
-      await sql`TRUNCATE TABLE anonymous_session CASCADE`;
-      await sql`TRUNCATE TABLE app_user CASCADE`;
-      await sql`TRUNCATE TABLE episode CASCADE`;
-      await sql`TRUNCATE TABLE anime_genre CASCADE`;
-      await sql`TRUNCATE TABLE anime CASCADE`;
-      await sql`TRUNCATE TABLE genre CASCADE`;
-      await sql`TRUNCATE TABLE anime_status CASCADE`;
-    } catch (error) {
-      console.error('Error truncating data:', error);
-      throw error;
-    }
-  }
 }
 
 module.exports = new AnimeModel();

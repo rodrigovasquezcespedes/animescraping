@@ -13,10 +13,16 @@
   margin-bottom: 8px;
 }
 .modal-servers-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: block;
   margin-bottom: 4px;
+}
+
+.servers-list-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  align-items: flex-start;
 }
 .server-button {
   background: linear-gradient(120deg, #23384a 60%, #3b657a 100%);
@@ -351,12 +357,15 @@ html, body {
 
 .modal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0,0,0,0.8);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 99999;
 }
 .modal-content {
   background: #222;
@@ -404,6 +413,7 @@ html, body {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   color: #7ecfff;
 }

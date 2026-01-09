@@ -12,5 +12,11 @@
   "requiredMemory": 16,
   "keywords": ["anime", "scraping", "galería", "webos"],
   "category": ["ENTERTAINMENT"],
-  "visible": true
+  "visible": true,
+  "permissions": [
+    {
+      "service": "luna://com.webos.applicationManager",
+      "access": "execute"
+    }
+  ]
 }

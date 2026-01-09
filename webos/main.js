@@ -16,9 +16,20 @@ function setFavorites(favs) {
 }
 // Permite mostrar/ocultar los links de servidores de un capítulo en el modal
 function toggleServers(id) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+  // Ocultar todos los servidores abiertos
+  let wasOpen = false;
+  document.querySelectorAll('.modal-servers-row').forEach(row => {
+    if (row.id === id && row.style.display === 'block') {
+      wasOpen = true;
+    }
+    row.style.display = 'none';
+  });
+  // Si ya estaba abierto, no lo volvemos a mostrar (efecto toggle)
+  if (!wasOpen) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = 'block';
+    }
   }
 }
 window.toggleServers = toggleServers;
@@ -48,7 +59,7 @@ function renderAnimeList(animes) {
     animeList.appendChild(card);
   });
 }
-const BASE_API_URL = 'http://192.168.1.157:5000/api/anime';
+const BASE_API_URL = 'http://localhost:5000/api/anime';
 let currentCategory = 'ANIME';
 
 const animeList = document.getElementById('anime-list');
@@ -59,118 +70,220 @@ const showFavoritesBtn = document.getElementById('show-favorites');
 async function showModal(anime) {
   try {
     console.log('[showModal] anime recibido:', anime);
+    if (!modal) {
+      alert('No se encontró el elemento modal en el DOM');
+      return;
+    }
     if (!anime || !anime.id) {
-      modal.innerHTML = '<div class="modal-content"><p style="color:#ff6b6b;">Error: El anime no tiene un ID válido.</p></div>';
+      modal.innerHTML = '<div class="modal-content"><p style="color:#ff6b6b;">Error: El anime no tiene un ID válido.</p><pre>' + JSON.stringify(anime, null, 2) + '</pre></div>';
       modal.style.display = 'flex';
       return;
     }
     // Siempre obtener datos actualizados del backend por ID
-    const res = await fetch(`${BASE_API_URL}/${anime.id}`);
-    console.log('[showModal] URL fetch:', `${BASE_API_URL}/${anime.id}`);
-    const result = await res.json();
-    console.log('[showModal] Respuesta backend:', result);
-    const data = result.data || result || {};
+    let data = null;
+    let fetchError = null;
+    try {
+      const res = await fetch(`${BASE_API_URL}/${anime.id}`);
+      console.log('[showModal] URL fetch:', `${BASE_API_URL}/${anime.id}`);
+      const result = await res.json();
+      console.log('[showModal] Respuesta backend:', result);
+      data = result.data || result || {};
+    } catch (err) {
+      fetchError = err;
+      console.error('[showModal] Error en fetch:', err);
+    }
     if (!data || !data.id) {
-      modal.innerHTML = '<div class="modal-content"><p style="color:#ff6b6b;">No se encontraron detalles para este anime.</p></div>';
+      modal.innerHTML = `<div class="modal-content"><p style=\"color:#ff6b6b;\">No se encontraron detalles para este anime.<br>${fetchError ? 'Error de red o backend: ' + fetchError : ''}</p><pre>${fetchError ? fetchError.stack : ''}</pre></div>`;
       modal.style.display = 'flex';
       return;
     }
-    const episodesArr = data.episodes || [];
-      let episodesHtml = '';
-      if (Array.isArray(episodesArr) && episodesArr.length > 0) {
-        const useScroll = episodesArr.length > 3;
-        episodesHtml = `<div class="modal-episodes-box">`;
-        episodesHtml += useScroll ? `<div class="modal-episodes-scroll">` : `<div class="modal-episodes-block">`;
-        episodesArr.forEach((ep, i) => {
-          const num = ep.episode_number || ep.number || ep.numero || ep.num || (i+1);
-          const title = ep.title || ep.name || ep.titulo || ep.título || `Episodio ${num}`;
-          const epId = `ep-${i}`;
-          episodesHtml += `<div class="modal-episode-group">
-            <div class="modal-episode-title" style="cursor:pointer;user-select:none;" onclick="toggleServers('${epId}')"><strong>Cap. ${num}:</strong> ${title} <span style='font-size:13px;color:#7ac6ff;'>&#9660;</span></div>
-            <div class="modal-servers-row" id="${epId}" style="display:none;">`;
-          if (Array.isArray(ep.servers) && ep.servers.length > 0) {
-            ep.servers.forEach((srv, idx) => {
-              episodesHtml += `<button class="server-button" tabindex="0" onclick="window.open('${srv.url}','_blank')">${srv.name || 'Servidor ' + (idx+1)}</button>`;
-            });
-          } else {
-            episodesHtml += `<span style=\"color:#b0b8c8;font-size:13px;\">Sin servidores disponibles</span>`;
-          }
-          episodesHtml += `</div></div>`;
-        });
+    let episodesArr = data.episodes || [];
+    // Invertir el orden para mostrar el más reciente arriba
+    episodesArr = episodesArr.slice().reverse();
+    let episodesHtml = '';
+    if (Array.isArray(episodesArr) && episodesArr.length > 0) {
+      const useScroll = episodesArr.length > 3;
+      episodesHtml = `<div class="modal-episodes-box">`;
+      episodesHtml += useScroll ? `<div class="modal-episodes-scroll">` : `<div class="modal-episodes-block">`;
+      for (let i = 0; i < episodesArr.length; i++) {
+        const ep = episodesArr[i];
+        const num = ep.episode_number || ep.number || ep.numero || ep.num || (i+1);
+        if (parseInt(num, 10) === 0) continue; // Omitir capítulo 0
+        let title = ep.title || ep.name || ep.titulo || ep.título || `Episodio ${num}`;
+        // Eliminar la palabra 'cap' y el número al inicio del título
+        title = title.replace(/^cap\.?\s*\d+\s*-?\s*/i, '');
+        const epId = `ep-${i}`;
+        episodesHtml += `<div class="modal-episode-group">
+          <div class="modal-episode-title" style="cursor:pointer;user-select:none;" onclick="toggleServers('${epId}')"><strong>${title}</strong> <span style='font-size:13px;color:#7ac6ff;'>&#9660;</span></div>
+          <div class="modal-servers-row" id="${epId}" style="display:none;">`;
+        if (Array.isArray(ep.servers) && ep.servers.length > 0) {
+          episodesHtml += `<div class="servers-list-column">`;
+          ep.servers.forEach((srv, idx) => {
+            episodesHtml += `<button class="server-button" tabindex="0" onclick="playVideo('${srv.url}')">${srv.name || 'Servidor ' + (idx+1)}</button>`;
+          });
+          episodesHtml += `</div>`;
+        } else {
+          episodesHtml += `<span style=\"color:#b0b8c8;font-size:13px;\">Sin servidores disponibles</span>`;
+        }
         episodesHtml += `</div></div>`;
       }
-
-    // Permite mostrar/ocultar los links de servidores de un capítulo en el modal
-    function toggleServers(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
-      }
+      episodesHtml += `</div></div>`;
     }
-    window.toggleServers = toggleServers;
-    // Buscar la mejor descripción disponible
+    // Mostrar el modal con el contenido generado
     let desc = data.description || data.sinopsis || data.summary || data.synopsis || data.resumen || '';
     if (!desc) desc = '<span style="color:#b0b8c8;font-style:italic;">Sin descripción disponible.</span>';
-    // Determinar si es favorito
     const isFav = getFavorites().some(f => f.id === data.id);
-        modal.innerHTML = `<div class="modal-content">
-          <div class="modal-main-row">
-            <div class="modal-img-col" style="position:relative;">
-              <img src="${data.image_url}" alt="${data.title}" class="anime-img-modal" onerror="this.style.display='none'">
-              <button id="modal-fav-btn" class="favorite-btn${isFav ? ' active' : ''}" title="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}" tabindex="0" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);border:2px solid #fff;width:54px;height:54px;font-size:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;color:#ff6b6b;box-shadow:0 2px 12px #0006;outline:none;transition:box-shadow 0.2s;">
-                <span style="pointer-events:none;">${isFav ? '❤️' : '🤍'}</span>
-              </button>
-            </div>
-            <div class="modal-desc-col">
-              <div style='display: flex; align-items: center; justify-content: space-between; gap: 1rem;'>
-                <h2 style='margin-bottom: 0;'>${data.title}</h2>
-                <button class="modal-close-btn" aria-label="Cerrar" tabindex="0" onclick="document.getElementById('modal').style.display='none';document.body.style.overflow='';">Cerrar</button>
-              </div>
-              <p>${desc}</p>
-              <div class="modal-episodes-row">
-                ${episodesHtml}
-              </div>
-            </div>
+    modal.innerHTML = `<div class="modal-content">
+      <div class="modal-main-row">
+        <div class="modal-img-col" style="position:relative;">
+          <img src="${data.image_url}" alt="${data.title}" class="anime-img-modal" onerror="this.style.display='none'">
+          <button id="modal-fav-btn" class="favorite-btn${isFav ? ' active' : ''}" title="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}" tabindex="0" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);border:2px solid #fff;width:54px;height:54px;font-size:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;color:#ff6b6b;box-shadow:0 2px 12px #0006;outline:none;transition:box-shadow 0.2s;">
+            <span style="pointer-events:none;">${isFav ? '❤️' : '🤍'}</span>
+          </button>
+        </div>
+        <div class="modal-desc-col">
+          <div style='display: flex; align-items: center; justify-content: space-between; gap: 1rem;'>
+            <h2 style='margin-bottom: 0;'>${data.title}</h2>
+            <button class="modal-close-btn" aria-label="Cerrar" tabindex="0" onclick="document.getElementById('modal').style.display='none';document.body.style.overflow='';">Cerrar</button>
           </div>
-        </div>`;
-    // Lógica de favoritos en el modal
-    const favBtn = document.getElementById('modal-fav-btn');
-    favBtn.onclick = (e) => {
-      e.stopPropagation();
-      const favs = getFavorites();
-      if (favs.some(f => f.id === data.id)) {
-        removeFavorite(data.id);
-        favBtn.classList.remove('active');
-        favBtn.querySelector('span').textContent = '🤍';
-        favBtn.title = 'Agregar a favoritos';
-      } else {
-        addFavorite(data);
-        favBtn.classList.add('active');
-        favBtn.querySelector('span').textContent = '❤️';
-        favBtn.title = 'Quitar de favoritos';
-      }
-    };
-    // Accesibilidad: activar con Enter/Espacio y foco visual
-    favBtn.onkeydown = (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        favBtn.click();
-      }
-    };
-    favBtn.onfocus = () => {
-      favBtn.style.boxShadow = '0 0 0 4px #7ac6ff, 0 2px 12px #0006';
-    };
-    favBtn.onblur = () => {
-      favBtn.style.boxShadow = '0 2px 12px #0006';
-    };
+          <p>${desc}</p>
+          <div class="modal-episodes-row">
+            ${episodesHtml}
+          </div>
+        </div>
+      </div>
+    </div>`;
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    // Lógica de favoritos en el modal
+    const favBtn = document.getElementById('modal-fav-btn');
+    if (favBtn) {
+      favBtn.onclick = (e) => {
+        e.stopPropagation();
+        const favs = getFavorites();
+        if (favs.some(f => f.id === data.id)) {
+          removeFavorite(data.id);
+          favBtn.classList.remove('active');
+          favBtn.querySelector('span').textContent = '🤍';
+          favBtn.title = 'Agregar a favoritos';
+        } else {
+          addFavorite(data);
+          favBtn.classList.add('active');
+          favBtn.querySelector('span').textContent = '❤️';
+          favBtn.title = 'Quitar de favoritos';
+        }
+      };
+      favBtn.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          favBtn.click();
+        }
+      };
+      favBtn.onfocus = () => {
+        favBtn.style.boxShadow = '0 0 0 4px #7ac6ff, 0 2px 12px #0006';
+      };
+      favBtn.onblur = () => {
+        favBtn.style.boxShadow = '0 2px 12px #0006';
+      };
+    }
   } catch (e) {
     console.error('[showModal] Error:', e);
     modal.innerHTML = `<div class="modal-content"><p style="color:#ff6b6b;">Error al cargar detalles del anime.<br>${e && e.message ? e.message : ''}</p></div>`;
     modal.style.display = 'flex';
   }
 }
+
+// Modal exclusivo para el iframe de video fullscreen
+function showIframeModal(url) {
+  let iframeModal = document.getElementById('iframe-modal');
+  if (!iframeModal) {
+    iframeModal = document.createElement('div');
+    iframeModal.id = 'iframe-modal';
+    document.body.appendChild(iframeModal);
+  }
+  iframeModal.innerHTML = `
+    <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:100000;background:#000;">
+      <button aria-label="Cerrar" tabindex="0" style="position:absolute;top:24px;right:32px;z-index:100001;padding:16px 28px;font-size:1.2rem;background:#222b3a;color:#fff;border:none;border-radius:8px;box-shadow:0 2px 12px #0006;" onclick="closeIframeModal();">Cerrar</button>
+      <iframe id="video-iframe" src="${url}" style="position:absolute;top:0;left:0;width:100vw;height:100vh;border:none;margin:0;padding:0;z-index:100000;" allowfullscreen></iframe>
+    </div>
+  `;
+  iframeModal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+    function closeIframeModal() {
+      const iframeModal = document.getElementById('iframe-modal');
+      if (iframeModal) {
+        iframeModal.style.display = 'none';
+        iframeModal.innerHTML = '';
+      }
+      document.body.style.overflow = '';
+    }
+// ...existing code...
+
+function playVideo(url) {
+  console.log('[webOS] playVideo called', url);
+  const videoExtensions = ['.mp4', '.mkv', '.avi', '.mov', '.webm', '.ts', '.m3u8'];
+  const isDirectVideo = videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  if (isDirectVideo && window.webOS && window.webOS.service && window.webOS.service.request) {
+    // Reproductor nativo para archivos directos
+    const playerIds = [
+      "com.webos.app.media",
+      "com.webos.app.photovideo",
+      "com.webos.app.mediadiscovery"
+    ];
+    let launched = false;
+    let lastError = null;
+    function tryLaunch(idx) {
+      if (idx >= playerIds.length) {
+        window.open(url, '_blank');
+        return;
+      }
+      const playerId = playerIds[idx];
+      window.webOS.service.request("luna://com.webos.applicationManager", {
+        method: "launch",
+        parameters: {
+          id: playerId,
+          params: { target: url }
+        },
+        onSuccess: function (res) {
+          launched = true;
+        },
+        onFailure: function (err) {
+          lastError = err;
+          tryLaunch(idx + 1);
+        }
+      });
+    }
+    tryLaunch(0);
+  } else {
+    showIframeModal(url);
+  }
+}
+window.playVideo = playVideo;
+
+    // Permite mostrar/ocultar los links de servidores de un capítulo en el modal
+// Permite mostrar/ocultar los links de servidores de un capítulo en el modal
+function toggleServers(id) {
+  // Ocultar todos los servidores abiertos
+  let wasOpen = false;
+  document.querySelectorAll('.modal-servers-row').forEach(row => {
+    if (row.id === id && row.style.display === 'block') {
+      wasOpen = true;
+    }
+    row.style.display = 'none';
+  });
+  // Si ya estaba abierto, no lo volvemos a mostrar (efecto toggle)
+  if (!wasOpen) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = 'block';
+    }
+  }
+}
+
+window.toggleServers = toggleServers;
+
 
 function renderFavorites() {
   favoritesList.innerHTML = '';

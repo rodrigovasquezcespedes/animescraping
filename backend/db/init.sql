@@ -1,4 +1,17 @@
 -- ======================================================
+-- SERVIDORES DE EPISODIO
+-- ======================================================
+
+CREATE TABLE IF NOT EXISTS episode_server (
+  id SERIAL PRIMARY KEY,
+  episode_id INT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  url VARCHAR(500) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (episode_id, url),
+  FOREIGN KEY (episode_id) REFERENCES episode(id) ON DELETE CASCADE
+);
+-- ======================================================
 -- PROYECTO: ANIME SCRAPING
 -- MOTOR: PostgreSQL
 -- ESQUEMA NORMALIZADO (3FN)

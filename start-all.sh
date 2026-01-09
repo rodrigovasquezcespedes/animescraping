@@ -26,15 +26,27 @@ check_port() {
 # Verificar puertos
 echo -e "${YELLOW}🔍 Verificando puertos...${NC}"
 if check_port 5000; then
-    echo -e "${RED}❌ Puerto 5000 (Backend) ya está en uso${NC}"
-    echo -e "${YELLOW}   Detener con: lsof -ti:5000 | xargs kill -9${NC}"
-    exit 1
+    echo -e "${RED}❌ Puerto 5000 (Backend) ya está en uso. Matando proceso...${NC}"
+    lsof -ti:5000 | xargs kill -9
+    sleep 1
+    if check_port 5000; then
+        echo -e "${RED}❌ No se pudo liberar el puerto 5000. Abortando.${NC}"
+        exit 1
+    else
+        echo -e "${GREEN}✅ Puerto 5000 liberado${NC}"
+    fi
 fi
 
 if check_port 5173; then
-    echo -e "${RED}❌ Puerto 5173 (Frontend) ya está en uso${NC}"
-    echo -e "${YELLOW}   Detener con: lsof -ti:5173 | xargs kill -9${NC}"
-    exit 1
+    echo -e "${RED}❌ Puerto 5173 (Frontend) ya está en uso. Matando proceso...${NC}"
+    lsof -ti:5173 | xargs kill -9
+    sleep 1
+    if check_port 5173; then
+        echo -e "${RED}❌ No se pudo liberar el puerto 5173. Abortando.${NC}"
+        exit 1
+    else
+        echo -e "${GREEN}✅ Puerto 5173 liberado${NC}"
+    fi
 fi
 
 echo -e "${GREEN}✅ Puertos disponibles${NC}"

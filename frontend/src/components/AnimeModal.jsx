@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import '../styles/AnimeModal.css'
 
+
 export default function AnimeModal({ anime, onClose }) {
   const [episodes, setEpisodes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState(null)
 
   useEffect(() => {
     if (anime) {
@@ -55,14 +57,32 @@ export default function AnimeModal({ anime, onClose }) {
                   <div className="modal-episodes-scroll">
                     <div className="modal-episodes-grid">
                       {episodes.map((episode) => (
-                        <button
-                          key={episode.id}
-                          className="episode-button"
-                          onClick={() => window.open(episode.url, '_blank')}
-                        >
-                          <span className="episode-number">Cap. {episode.episode_number}</span>
-                          {episode.title && <span className="episode-title">{episode.title}</span>}
-                        </button>
+                        <div key={episode.id} style={{ marginBottom: '0.5rem' }}>
+                          <button
+                            className={`episode-button${selectedEpisodeId === episode.id ? ' selected' : ''}`}
+                            onClick={() => setSelectedEpisodeId(selectedEpisodeId === episode.id ? null : episode.id)}
+                          >
+                            <span className="episode-number">Cap. {episode.episode_number}</span>
+                            {episode.title && <span className="episode-title">{episode.title}</span>}
+                          </button>
+                          {selectedEpisodeId === episode.id && episode.servers && episode.servers.length > 0 && (
+                            <div className="episode-servers-list" style={{ marginTop: '0.3rem', marginLeft: '1.5rem' }}>
+                              <strong>Servidores:</strong>
+                              <ul style={{ paddingLeft: '1rem' }}>
+                                {episode.servers.map((srv, idx) => (
+                                  <li key={srv.url + idx}>
+                                    <a href={srv.url} target="_blank" rel="noopener noreferrer">{srv.name}</a>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {selectedEpisodeId === episode.id && (!episode.servers || episode.servers.length === 0) && (
+                            <div className="episode-servers-list" style={{ marginTop: '0.3rem', marginLeft: '1.5rem', color: '#c00' }}>
+                              <em>No hay servidores disponibles para este capítulo.</em>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>

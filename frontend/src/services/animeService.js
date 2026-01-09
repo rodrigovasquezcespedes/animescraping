@@ -20,16 +20,6 @@ export const getSessionId = () => {
 };
 
 export const animeService = {
-  getAllAnime: async (limit = 10, offset = 0) => {
-    try {
-      const response = await fetch(`${API_URL}/anime?limit=${limit}&offset=${offset}`);
-      if (!response.ok) throw new Error('Error fetching anime');
-      return await response.json();
-    } catch (error) {
-      console.error('Error:', error);
-      throw error;
-    }
-  },
 
   getAnimeById: async (id) => {
     try {
